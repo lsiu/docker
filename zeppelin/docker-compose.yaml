@@ -1,0 +1,26 @@
+services:
+  zeppelin:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM apache/zeppelin:0.12.0
+        USER root
+        RUN apt-get update && apt-get install -y wget && \
+            wget https://dlcdn.apache.org/spark/spark-3.5.6/spark-3.5.6-bin-hadoop3-scala2.13.tgz && \
+            tar -xzf spark-3.5.6-bin-hadoop3-scala2.13.tgz && \
+            mv spark-3.5.6-bin-hadoop3-scala2.13 /opt/spark && \
+            rm spark-3.5.6-bin-hadoop3-scala2.13.tgz
+        RUN chown -R 1000:1000 /opt/spark
+        USER 1000
+    container_name: zeppelin
+    ports:
+      - "8080:8080"
+    environment:
+      - SPARK_HOME=/opt/spark
+    volumes:
+      - ./notebook:/opt/zeppelin/notebook
+      - ./conf/spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf
+      - ./conf/spark/hive-site.xml:/opt/spark/conf/hive-site.xml
+      - ./data/spark_catalog:/data
+    entrypoint: /bin/bash /opt/zeppelin/bin/zeppelin.sh
+  
